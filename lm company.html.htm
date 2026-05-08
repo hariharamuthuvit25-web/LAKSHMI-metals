@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lakshmi Metals — Business Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0e1017; --surface:#141720; --surface2:#1c2030; --border:#252a3a;
+    --accent:#f0a500; --accent2:#ffc840; --green:#27c98a; --red:#e85454;
+    --blue:#4a9eff; --purple:#a78bfa; --text:#e6e9f4; --muted:#636b85; --subtle:#2e3448;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+  /* LOGIN */
+  #login-screen{
+    position:fixed;inset:0;background:var(--bg);z-index:999;
+    display:flex;align-items:center;justify-content:center;
+    background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+    background-size:40px 40px;
+  }
+  .login-card{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--accent);padding:44px 40px 36px;width:360px;box-shadow:0 24px 80px #00000080;}
+  .login-brand{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--accent);letter-spacing:2px;}
+  .login-tagline{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:32px;margin-top:2px;}
+  .login-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block;}
+  .login-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 14px;font-family:'IBM Plex Mono',monospace;font-size:14px;outline:none;margin-bottom:16px;transition:border .2s;}
+  .login-input:focus{border-color:var(--accent);}
+  .login-btn{width:100%;background:var(--accent);color:#0e1017;border:none;padding:12px;font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;cursor:pointer;text-transform:uppercase;transition:background .2s;}
+  .login-btn:hover{background:var(--accent2);}
+  .login-error{color:var(--red);font-size:12px;margin-top:10px;display:none;}
+
+  /* LAYOUT */
+  #dashboard{display:none;}
+  .sidebar{position:fixed;top:0;left:0;width:220px;height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;}
+  .sidebar-brand{padding:24px 20px 20px;border-bottom:1px solid var(--border);}
+  .sidebar-brand-name{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;color:var(--accent);letter-spacing:1px;}
+  .sidebar-brand-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+  .sidebar-nav{flex:1;padding:16px 0;overflow-y:auto;}
+  .nav-section{font-size:10px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;padding:10px 20px 6px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;border-left:3px solid transparent;}
+  .nav-item:hover{color:var(--text);background:var(--surface2);}
+  .nav-item.active{color:var(--accent);border-left-color:var(--accent);background:rgba(240,165,0,.07);}
+  .nav-icon{font-size:15px;width:18px;text-align:center;}
+  .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--muted);}
+  .logout-btn{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--muted);font-size:12px;margin-top:8px;transition:color .15s;}
+  .logout-btn:hover{color:var(--red);}
+  .main{margin-left:220px;padding:28px 28px 40px;min-height:100vh;}
+
+  /* TOPBAR */
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+  .page-title{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--text);letter-spacing:1px;}
+  .page-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .date-badge{background:var(--surface);border:1px solid var(--border);padding:6px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);}
+
+  /* FILTERS */
+  .filter-bar{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;align-items:center;}
+  .search-wrap{position:relative;flex:1;min-width:200px;}
+  .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;}
+  .search-input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 12px 9px 36px;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;transition:border .2s;}
+  .search-input:focus{border-color:var(--accent);}
+  .filter-select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:9px 12px;font-size:12px;font-family:'IBM Plex Sans',sans-serif;outline:none;cursor:pointer;min-width:140px;}
+  .filter-select:focus{border-color:var(--accent);}
+  .btn-filter{background:var(--accent);color:#0e1017;border:none;padding:9px 18px;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;text-transform:uppercase;}
+  .btn-filter:hover{background:var(--accent2);}
+  .btn-reset{background:transparent;border:1px solid var(--border);color:var(--muted);padding:9px 14px;font-size:12px;cursor:pointer;}
+  .btn-reset:hover{border-color:var(--muted);color:var(--text);}
+
+  /* KPI */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);padding:20px 20px 16px;position:relative;overflow:hidden;transition:border-color .2s;}
+  .kpi-card:hover{border-color:var(--accent);}
+  .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+  .kpi-card.gold::before{background:var(--accent);}
+  .kpi-card.green::before{background:var(--green);}
+  .kpi-card.blue::before{background:var(--blue);}
+  .kpi-card.purple::before{background:var(--purple);}
+  .kpi-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+  .kpi-value{font-family:'Rajdhani',sans-serif;font-size:32px;font-weight:700;color:var(--text);line-height:1;}
+  .kpi-value span{font-size:16px;color:var(--muted);font-weight:500;}
+  .kpi-change{font-size:11px;margin-top:8px;display:flex;align-items:center;gap:4px;}
+  .kpi-change.up{color:var(--green);}
+  .kpi-change.down{color:var(--red);}
+  .kpi-icon{position:absolute;right:16px;top:16px;font-size:22px;opacity:.18;}
+
+  /* ALERTS */
+  .alert-box{background:rgba(232,84,84,.08);border:1px solid rgba(232,84,84,.3);border-left:4px solid var(--red);padding:14px 18px;margin-bottom:16px;}
+  .alert-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--red);letter-spacing:1px;margin-bottom:8px;}
+  .alert-items{display:flex;flex-wrap:wrap;gap:8px;}
+  .alert-chip{background:rgba(232,84,84,.12);border:1px solid rgba(232,84,84,.25);padding:4px 12px;font-size:11px;color:#f8a0a0;}
+  .lowstock-box{background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.25);border-left:4px solid var(--accent);padding:14px 18px;margin-bottom:24px;}
+  .lowstock-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--accent);letter-spacing:1px;margin-bottom:8px;}
+  .lowstock-items{display:flex;flex-wrap:wrap;gap:8px;}
+  .lowstock-chip{background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.2);padding:4px 12px;font-size:11px;color:var(--accent2);}
+
+  /* SECTIONS */
+  .section{display:none;}
+  .section.active{display:block;}
+
+  /* TABLES */
+  .card{background:var(--surface);border:1px solid var(--border);margin-bottom:20px;}
+  .card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .card-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;color:var(--text);}
+  .card-count{font-size:11px;color:var(--muted);background:var(--surface2);padding:2px 10px;border:1px solid var(--border);}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead tr{background:var(--surface2);}
+  th{text-align:left;padding:10px 16px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border);}
+  td{padding:11px 16px;border-bottom:1px solid var(--border);color:var(--text);}
+  tbody tr:hover{background:var(--surface2);}
+  tbody tr:last-child td{border-bottom:none;}
+  .badge{display:inline-block;padding:2px 10px;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;border-radius:2px;}
+  .badge-pending{background:rgba(240,165,0,.15);color:var(--accent);border:1px solid rgba(240,165,0,.3);}
+  .badge-completed{background:rgba(39,201,138,.12);color:var(--green);border:1px solid rgba(39,201,138,.25);}
+  .badge-advance{background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.25);}
+  .badge-full{background:rgba(39,201,138,.12);color:var(--green);border:1px solid rgba(39,201,138,.25);}
+  .badge-partial{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.25);}
+  .badge-low{background:rgba(232,84,84,.12);color:var(--red);border:1px solid rgba(232,84,84,.25);}
+  .badge-ok{background:rgba(39,201,138,.12);color:var(--green);border:1px solid rgba(39,201,138,.25);}
+
+  /* REPORTS */
+  .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+  .report-card{background:var(--surface);border:1px solid var(--border);padding:20px;}
+  .report-card-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px;}
+  .report-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .report-row:last-child{border-bottom:none;}
+  .report-val{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--accent);}
+  .report-val.green{color:var(--green);}
+  .report-val.red{color:var(--red);}
+  .monthly-overview{background:var(--surface);border:1px solid var(--border);padding:20px;margin-bottom:20px;}
+  .overview-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;letter-spacing:1px;margin-bottom:12px;}
+  .overview-text{font-size:13px;color:var(--muted);line-height:1.9;}
+  .overview-text strong{color:var(--text);}
+  .bar-chart{display:flex;align-items:flex-end;gap:6px;height:80px;margin-top:12px;}
+  .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .bar{width:100%;background:var(--accent);opacity:.7;border-radius:2px 2px 0 0;transition:opacity .2s;}
+  .bar:hover{opacity:1;}
+  .bar-label{font-size:9px;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+
+  @media(max-width:900px){
+    .sidebar{width:60px;}
+    .sidebar-brand-name,.sidebar-brand-sub,.nav-section,.nav-item span,.sidebar-footer{display:none;}
+    .nav-item{justify-content:center;padding:12px;}
+    .main{margin-left:60px;padding:16px;}
+    .kpi-grid{grid-template-columns:repeat(2,1fr);}
+    .report-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-brand">⚙ LAKSHMI METALS</div>
+    <div class="login-tagline">Cookware Manufacturing — Business Portal</div>
+    <label class="login-label">Username</label>
+    <input class="login-input" id="login-user" type="text" placeholder="admin" autocomplete="off">
+    <label class="login-label">Password</label>
+    <input class="login-input" id="login-pass" type="password" placeholder="••••••••">
+    <button class="login-btn" onclick="doLogin()">Login →</button>
+    <div class="login-error" id="login-error">⚠ Invalid credentials. Try admin / admin123</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:16px;">Demo: <b style="color:var(--text)">admin</b> / <b style="color:var(--text)">admin123</b></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-name">⚙ LAKSHMI</div>
+      <div class="sidebar-brand-sub">Metals Dashboard</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">Main</div>
+      <div class="nav-item active" onclick="showSection('overview',this)"><span class="nav-icon">📊</span><span>Overview</span></div>
+      <div class="nav-item" onclick="showSection('orders',this)"><span class="nav-icon">📦</span><span>Orders</span></div>
+      <div class="nav-item" onclick="showSection('customers',this)"><span class="nav-icon">👥</span><span>Customers</span></div>
+      <div class="nav-item" onclick="showSection('payments',this)"><span class="nav-icon">💰</span><span>Payments</span></div>
+      <div class="nav-item" onclick="showSection('stock',this)"><span class="nav-icon">🏭</span><span>Stock</span></div>
+      <div class="nav-section">Analytics</div>
+      <div class="nav-item" onclick="showSection('reports',this)"><span class="nav-icon">📈</span><span>Reports</span></div>
+    </nav>
+    <div class="sidebar-footer">
+      <div>Logged in as <b style="color:var(--text)">Admin</b></div>
+      <div class="logout-btn" onclick="doLogout()">⏻ <span>Logout</span></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="page-title">Overview</div>
+        <div class="page-sub">Lakshmi Metals — Cookware Manufacturing Unit</div>
+      </div>
+      <div class="topbar-right">
+        <div class="date-badge" id="current-date"></div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filter-bar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="search-input" type="text" placeholder="Search orders, customers..." oninput="applyFilters()">
+      </div>
+      <select class="filter-select" id="filter-status" onchange="applyFilters()">
+        <option value="">All Order Status</option>
+        <option value="Pending">Pending</option>
+        <option value="Completed">Completed</option>
+      </select>
+      <select class="filter-select" id="filter-payment" onchange="applyFilters()">
+        <option value="">All Payment Types</option>
+        <option value="Advance">Advance</option>
+        <option value="Full Payment">Full Payment</option>
+        <option value="Partial">Partial</option>
+      </select>
+      <select class="filter-select" id="filter-period" onchange="applyFilters()">
+        <option value="">All Dates</option>
+        <option value="today">Today</option>
+        <option value="month">This Month</option>
+      </select>
+      <button class="btn-filter" onclick="applyFilters()">Apply</button>
+      <button class="btn-reset" onclick="resetFilters()">Reset</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="section active" id="section-overview">
+      <div class="kpi-grid">
+        <div class="kpi-card gold"><div class="kpi-label">Total Customers</div><div class="kpi-value">48<span> active</span></div><div class="kpi-change up">▲ 4 this month</div><div class="kpi-icon">👥</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Total Orders</div><div class="kpi-value">126<span> orders</span></div><div class="kpi-change up">▲ 12 this month</div><div class="kpi-icon">📦</div></div>
+        <div class="kpi-card green"><div class="kpi-label">Total Sales</div><div class="kpi-value">₹4.82<span>L</span></div><div class="kpi-change up">▲ ₹38,000 vs last month</div><div class="kpi-icon">💰</div></div>
+        <div class="kpi-card purple"><div class="kpi-label">Net Profit</div><div class="kpi-value">₹1.14<span>L</span></div><div class="kpi-change up">▲ 23.7% margin</div><div class="kpi-icon">📈</div></div>
+      </div>
+      <div class="alert-box">
+        <div class="alert-title">⚠ PENDING ORDERS ALERT</div>
+        <div class="alert-items">
+          <div class="alert-chip">ORD-019 — Ravi Stores (Due: 08 May)</div>
+          <div class="alert-chip">ORD-023 — Chennai Kitchens (Due: 10 May)</div>
+          <div class="alert-chip">ORD-031 — Home Needs Co. (Due: 12 May)</div>
+        </div>
+      </div>
+      <div class="lowstock-box">
+        <div class="lowstock-title">⚡ LOW STOCK ALERT</div>
+        <div class="lowstock-items">
+          <div class="lowstock-chip">Aluminium Sheets — 12 units left</div>
+          <div class="lowstock-chip">Steel Rods — 8 units left</div>
+          <div class="lowstock-chip">Handle Fittings — 20 units left</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">RECENT ORDERS</div><span class="card-count">5 recent records</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Qty</th><th>Amount</th><th>Status</th><th>Delivery Date</th></tr></thead>
+            <tbody>
+              <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:12px">ORD-031</td><td>Home Needs Co.</td><td>Pressure Cookers</td><td>50</td><td>₹62,500</td><td><span class="badge badge-pending">Pending</span></td><td>12 May 2026</td></tr>
+              <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:12px">ORD-030</td><td>Retail Mart</td><td>Non-Stick Pans</td><td>80</td><td>₹48,000</td><td><span class="badge badge-completed">Completed</span></td><td>05 May 2026</td></tr>
+              <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:12px">ORD-029</td><td>Star Kitchens</td><td>Aluminium Vessels</td><td>120</td><td>₹36,000</td><td><span class="badge badge-completed">Completed</span></td><td>04 May 2026</td></tr>
+              <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:12px">ORD-023</td><td>Chennai Kitchens</td><td>Steel Kadai Set</td><td>40</td><td>₹28,000</td><td><span class="badge badge-pending">Pending</span></td><td>10 May 2026</td></tr>
+              <tr><td style="font-family:'IBM Plex Mono',monospace;font-size:12px">ORD-019</td><td>Ravi Stores</td><td>Fry Pan (5L)</td><td>60</td><td>₹21,000</td><td><span class="badge badge-pending">Pending</span></td><td>08 May 2026</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="section" id="section-orders">
+      <div class="card">
+        <div class="card-header"><div class="card-title">ALL ORDERS</div><span class="card-count" id="order-count">12 records</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Order ID</th><th>Customer</th><th>Product</th><th>Qty</th><th>Amount</th><th>Payment</th><th>Status</th><th>Order Date</th><th>Delivery Date</th></tr></thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="section" id="section-customers">
+      <div class="card">
+        <div class="card-header"><div class="card-title">CUSTOMER DETAILS</div><span class="card-count">8 customers</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Cust ID</th><th>Name</th><th>Contact</th><th>Location</th><th>Total Orders</th><th>Total Value</th><th>Last Order</th></tr></thead>
+            <tbody id="customers-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAYMENTS -->
+    <div class="section" id="section-payments">
+      <div class="card">
+        <div class="card-header"><div class="card-title">PAYMENT HISTORY</div><span class="card-count">12 records</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Pay ID</th><th>Order ID</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Type</th><th>Date</th></tr></thead>
+            <tbody id="payments-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- STOCK -->
+    <div class="section" id="section-stock">
+      <div class="card">
+        <div class="card-header"><div class="card-title">RAW MATERIAL STOCK</div><span class="card-count">8 items</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Item</th><th>Category</th><th>In Stock</th><th>Min Level</th><th>Unit</th><th>Last Updated</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Aluminium Sheets</td><td>Raw Material</td><td style="color:var(--red)">12</td><td>50</td><td>sheets</td><td style="color:var(--muted)">06 May 2026</td><td><span class="badge badge-low">Low Stock</span></td></tr>
+              <tr><td>Steel Rods</td><td>Raw Material</td><td style="color:var(--red)">8</td><td>30</td><td>kg</td><td style="color:var(--muted)">06 May 2026</td><td><span class="badge badge-low">Low Stock</span></td></tr>
+              <tr><td>Handle Fittings</td><td>Component</td><td style="color:var(--red)">20</td><td>100</td><td>pcs</td><td style="color:var(--muted)">05 May 2026</td><td><span class="badge badge-low">Low Stock</span></td></tr>
+              <tr><td>Stainless Steel Coil</td><td>Raw Material</td><td style="color:var(--green)">180</td><td>100</td><td>kg</td><td style="color:var(--muted)">04 May 2026</td><td><span class="badge badge-ok">In Stock</span></td></tr>
+              <tr><td>Non-Stick Coating</td><td>Chemical</td><td style="color:var(--green)">65</td><td>30</td><td>litres</td><td style="color:var(--muted)">03 May 2026</td><td><span class="badge badge-ok">In Stock</span></td></tr>
+              <tr><td>Lid Glass</td><td>Component</td><td style="color:var(--green)">240</td><td>100</td><td>pcs</td><td style="color:var(--muted)">02 May 2026</td><td><span class="badge badge-ok">In Stock</span></td></tr>
+              <tr><td>Rivets</td><td>Component</td><td style="color:var(--green)">5000</td><td>2000</td><td>pcs</td><td style="color:var(--muted)">01 May 2026</td><td><span class="badge badge-ok">In Stock</span></td></tr>
+              <tr><td>Packing Boxes</td><td>Packaging</td><td style="color:var(--green)">320</td><td>200</td><td>pcs</td><td style="color:var(--muted)">01 May 2026</td><td><span class="badge badge-ok">In Stock</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="section" id="section-reports">
+      <div class="monthly-overview">
+        <div class="overview-title">📋 MONTHLY PERFORMANCE OVERVIEW — MAY 2026</div>
+        <div class="overview-text">
+          Lakshmi Metals recorded <strong>₹4,82,500</strong> in total sales this month with <strong>126 orders</strong> fulfilled across <strong>48 active customers</strong>. Net profit stands at <strong>₹1,14,600</strong> representing a <strong>23.7% margin</strong>. Pending orders worth <strong>₹1,11,500</strong> are due by 12 May 2026. Raw material stock requires immediate replenishment for <strong>Aluminium Sheets, Steel Rods,</strong> and <strong>Handle Fittings</strong>. Overall performance shows <strong>▲ 8.5% growth</strong> compared to April 2026.
+        </div>
+      </div>
+      <div class="report-grid">
+        <div class="report-card">
+          <div class="report-card-title">📅 Daily Summary — 07 May 2026</div>
+          <div class="report-row"><span>New Orders</span><span class="report-val">4</span></div>
+          <div class="report-row"><span>Orders Completed</span><span class="report-val">2</span></div>
+          <div class="report-row"><span>Daily Sales</span><span class="report-val">₹18,400</span></div>
+          <div class="report-row"><span>Payments Received</span><span class="report-val green">₹14,000</span></div>
+          <div class="report-row"><span>Pending Deliveries</span><span class="report-val red">3</span></div>
+        </div>
+        <div class="report-card">
+          <div class="report-card-title">📆 Monthly Summary — May 2026</div>
+          <div class="report-row"><span>Total Orders</span><span class="report-val">126</span></div>
+          <div class="report-row"><span>Completed Orders</span><span class="report-val green">98</span></div>
+          <div class="report-row"><span>Pending Orders</span><span class="report-val red">28</span></div>
+          <div class="report-row"><span>Total Revenue</span><span class="report-val">₹4,82,500</span></div>
+          <div class="report-row"><span>Net Profit</span><span class="report-val green">₹1,14,600</span></div>
+        </div>
+        <div class="report-card">
+          <div class="report-card-title">💳 Payment Summary</div>
+          <div class="report-row"><span>Full Payments</span><span class="report-val green">₹3,10,000</span></div>
+          <div class="report-row"><span>Advance Received</span><span class="report-val">₹88,500</span></div>
+          <div class="report-row"><span>Balance Pending</span><span class="report-val red">₹84,000</span></div>
+          <div class="report-row"><span>Total Collected</span><span class="report-val">₹3,98,500</span></div>
+        </div>
+        <div class="report-card">
+          <div class="report-card-title">🏭 Production Summary</div>
+          <div class="report-row"><span>Units Manufactured</span><span class="report-val">2,840</span></div>
+          <div class="report-row"><span>Units Dispatched</span><span class="report-val green">2,410</span></div>
+          <div class="report-row"><span>Units in Warehouse</span><span class="report-val">430</span></div>
+          <div class="report-row"><span>Defect Rate</span><span class="report-val red">1.2%</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">MONTHLY SALES TREND (₹ in Lakhs)</div></div>
+        <div style="padding:20px">
+          <div class="bar-chart">
+            <div class="bar-wrap"><div class="bar" style="height:55%"></div><div class="bar-label">NOV</div></div>
+            <div class="bar-wrap"><div class="bar" style="height:60%"></div><div class="bar-label">DEC</div></div>
+            <div class="bar-wrap"><div class="bar" style="height:45%"></div><div class="bar-label">JAN</div></div>
+            <div class="bar-wrap"><div class="bar" style="height:70%"></div><div class="bar-label">FEB</div></div>
+            <div class="bar-wrap"><div class="bar" style="height:65%"></div><div class="bar-label">MAR</div></div>
+            <div class="bar-wrap"><div class="bar" style="height:85%"></div><div class="bar-label">APR</div></div>
+            <div class="bar-wrap"><div class="bar" style="height:95%;opacity:1;background:var(--accent2)"></div><div class="bar-label" style="color:var(--accent)">MAY</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const orders=[
+  {id:'ORD-031',customer:'Home Needs Co.',product:'Pressure Cookers',qty:50,amount:62500,payment:'Advance',status:'Pending',date:'01 May 2026',delivery:'12 May 2026'},
+  {id:'ORD-030',customer:'Retail Mart',product:'Non-Stick Pans',qty:80,amount:48000,payment:'Full Payment',status:'Completed',date:'01 May 2026',delivery:'05 May 2026'},
+  {id:'ORD-029',customer:'Star Kitchens',product:'Aluminium Vessels',qty:120,amount:36000,payment:'Full Payment',status:'Completed',date:'30 Apr 2026',delivery:'04 May 2026'},
+  {id:'ORD-028',customer:'Kumar Traders',product:'Steel Kadai',qty:30,amount:18000,payment:'Partial',status:'Completed',date:'29 Apr 2026',delivery:'03 May 2026'},
+  {id:'ORD-027',customer:'Anand Stores',product:'Fry Pan Set',qty:45,amount:22500,payment:'Full Payment',status:'Completed',date:'28 Apr 2026',delivery:'02 May 2026'},
+  {id:'ORD-026',customer:'Meena Traders',product:'Pressure Cookers',qty:25,amount:31250,payment:'Advance',status:'Completed',date:'27 Apr 2026',delivery:'01 May 2026'},
+  {id:'ORD-025',customer:'Bala Enterprises',product:'Idli Pots',qty:60,amount:15000,payment:'Full Payment',status:'Completed',date:'26 Apr 2026',delivery:'30 Apr 2026'},
+  {id:'ORD-024',customer:'Raj Kitchenware',product:'Non-Stick Pans',qty:100,amount:60000,payment:'Partial',status:'Completed',date:'25 Apr 2026',delivery:'29 Apr 2026'},
+  {id:'ORD-023',customer:'Chennai Kitchens',product:'Steel Kadai Set',qty:40,amount:28000,payment:'Advance',status:'Pending',date:'24 Apr 2026',delivery:'10 May 2026'},
+  {id:'ORD-022',customer:'Senthil Wholesale',product:'Aluminium Vessels',qty:200,amount:60000,payment:'Full Payment',status:'Completed',date:'23 Apr 2026',delivery:'28 Apr 2026'},
+  {id:'ORD-021',customer:'GKS Distributors',product:'Pressure Cookers',qty:70,amount:87500,payment:'Full Payment',status:'Completed',date:'22 Apr 2026',delivery:'27 Apr 2026'},
+  {id:'ORD-019',customer:'Ravi Stores',product:'Fry Pan (5L)',qty:60,amount:21000,payment:'Advance',status:'Pending',date:'20 Apr 2026',delivery:'08 May 2026'},
+];
+
+const customers=[
+  {id:'CUS-001',name:'Home Needs Co.',contact:'98401 11234',location:'Erode',orders:8,value:'₹2,80,000',last:'01 May 2026'},
+  {id:'CUS-002',name:'Retail Mart',contact:'97890 22345',location:'Coimbatore',orders:12,value:'₹4,20,000',last:'01 May 2026'},
+  {id:'CUS-003',name:'Star Kitchens',contact:'96780 33456',location:'Salem',orders:6,value:'₹1,60,000',last:'30 Apr 2026'},
+  {id:'CUS-004',name:'Kumar Traders',contact:'95670 44567',location:'Tiruppur',orders:9,value:'₹2,10,000',last:'29 Apr 2026'},
+  {id:'CUS-005',name:'Anand Stores',contact:'94560 55678',location:'Erode',orders:5,value:'₹98,500',last:'28 Apr 2026'},
+  {id:'CUS-006',name:'Meena Traders',contact:'93450 66789',location:'Namakkal',orders:4,value:'₹82,000',last:'27 Apr 2026'},
+  {id:'CUS-007',name:'Chennai Kitchens',contact:'92340 77890',location:'Chennai',orders:11,value:'₹3,90,000',last:'24 Apr 2026'},
+  {id:'CUS-008',name:'Ravi Stores',contact:'91230 88901',location:'Sathyamangalam',orders:7,value:'₹1,40,000',last:'20 Apr 2026'},
+];
+
+const payments=[
+  {id:'PAY-031',order:'ORD-031',customer:'Home Needs Co.',total:62500,paid:31250,balance:31250,type:'Advance',date:'01 May 2026'},
+  {id:'PAY-030',order:'ORD-030',customer:'Retail Mart',total:48000,paid:48000,balance:0,type:'Full Payment',date:'01 May 2026'},
+  {id:'PAY-029',order:'ORD-029',customer:'Star Kitchens',total:36000,paid:36000,balance:0,type:'Full Payment',date:'30 Apr 2026'},
+  {id:'PAY-028',order:'ORD-028',customer:'Kumar Traders',total:18000,paid:10000,balance:8000,type:'Partial',date:'29 Apr 2026'},
+  {id:'PAY-027',order:'ORD-027',customer:'Anand Stores',total:22500,paid:22500,balance:0,type:'Full Payment',date:'28 Apr 2026'},
+  {id:'PAY-026',order:'ORD-026',customer:'Meena Traders',total:31250,paid:15000,balance:16250,type:'Advance',date:'27 Apr 2026'},
+  {id:'PAY-025',order:'ORD-025',customer:'Bala Enterprises',total:15000,paid:15000,balance:0,type:'Full Payment',date:'26 Apr 2026'},
+  {id:'PAY-024',order:'ORD-024',customer:'Raj Kitchenware',total:60000,paid:35000,balance:25000,type:'Partial',date:'25 Apr 2026'},
+  {id:'PAY-023',order:'ORD-023',customer:'Chennai Kitchens',total:28000,paid:14000,balance:14000,type:'Advance',date:'24 Apr 2026'},
+  {id:'PAY-022',order:'ORD-022',customer:'Senthil Wholesale',total:60000,paid:60000,balance:0,type:'Full Payment',date:'23 Apr 2026'},
+  {id:'PAY-021',order:'ORD-021',customer:'GKS Distributors',total:87500,paid:87500,balance:0,type:'Full Payment',date:'22 Apr 2026'},
+  {id:'PAY-019',order:'ORD-019',customer:'Ravi Stores',total:21000,paid:10000,balance:11000,type:'Advance',date:'20 Apr 2026'},
+];
+
+function doLogin(){
+  const u=document.getElementById('login-user').value;
+  const p=document.getElementById('login-pass').value;
+  if(u==='admin'&&p==='admin123'){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    renderAll();
+  } else {
+    document.getElementById('login-error').style.display='block';
+  }
+}
+document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('login-user').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+function doLogout(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-error').style.display='none';
+}
+
+document.getElementById('current-date').textContent=new Date().toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+
+function showSection(name,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('section-'+name).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('page-title').textContent=el.querySelector('span:last-child').textContent;
+}
+
+function renderOrders(data){
+  document.getElementById('order-count').textContent=data.length+' records';
+  document.getElementById('orders-tbody').innerHTML=data.map(o=>`
+    <tr>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px">${o.id}</td>
+      <td>${o.customer}</td><td>${o.product}</td><td>${o.qty}</td>
+      <td>₹${o.amount.toLocaleString('en-IN')}</td>
+      <td><span class="badge badge-${o.payment==='Full Payment'?'full':o.payment==='Advance'?'advance':'partial'}">${o.payment}</span></td>
+      <td><span class="badge badge-${o.status.toLowerCase()}">${o.status}</span></td>
+      <td style="color:var(--muted);font-size:12px">${o.date}</td>
+      <td style="font-size:12px">${o.delivery}</td>
+    </tr>`).join('');
+}
+
+function renderCustomers(data){
+  document.getElementById('customers-tbody').innerHTML=data.map(c=>`
+    <tr>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)">${c.id}</td>
+      <td><b>${c.name}</b></td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px">${c.contact}</td>
+      <td>${c.location}</td>
+      <td style="text-align:center">${c.orders}</td>
+      <td style="color:var(--green)">${c.value}</td>
+      <td style="color:var(--muted);font-size:12px">${c.last}</td>
+    </tr>`).join('');
+}
+
+function renderPayments(data){
+  document.getElementById('payments-tbody').innerHTML=data.map(p=>`
+    <tr>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)">${p.id}</td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:12px">${p.order}</td>
+      <td>${p.customer}</td>
+      <td>₹${p.total.toLocaleString('en-IN')}</td>
+      <td style="color:var(--green)">₹${p.paid.toLocaleString('en-IN')}</td>
+      <td style="color:${p.balance>0?'var(--red)':'var(--muted)'}">₹${p.balance.toLocaleString('en-IN')}</td>
+      <td><span class="badge badge-${p.type==='Full Payment'?'full':p.type==='Advance'?'advance':'partial'}">${p.type}</span></td>
+      <td style="color:var(--muted);font-size:12px">${p.date}</td>
+    </tr>`).join('');
+}
+
+function renderAll(){renderOrders(orders);renderCustomers(customers);renderPayments(payments);}
+
+function applyFilters(){
+  const q=document.getElementById('search-input').value.toLowerCase();
+  const st=document.getElementById('filter-status').value;
+  const pt=document.getElementById('filter-payment').value;
+  renderOrders(orders.filter(o=>{
+    const mq=!q||o.id.toLowerCase().includes(q)||o.customer.toLowerCase().includes(q)||o.product.toLowerCase().includes(q);
+    const ms=!st||o.status===st;
+    const mp=!pt||o.payment===pt;
+    return mq&&ms&&mp;
+  }));
+  renderCustomers(customers.filter(c=>!q||c.name.toLowerCase().includes(q)||c.location.toLowerCase().includes(q)));
+}
+
+function resetFilters(){
+  document.getElementById('search-input').value='';
+  document.getElementById('filter-status').value='';
+  document.getElementById('filter-payment').value='';
+  document.getElementById('filter-period').value='';
+  renderAll();
+}
+</script>
+</body>
+</html>
